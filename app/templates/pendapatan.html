@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block judul %}Pendapatan {{ tahun }}{% endblock %}
+{% block halaman %}Pendapatan {{ tahun }}{% endblock %}
+{% block lede %}Satu baris untuk setiap penerimaan. Angka yang dipakai untuk pajak adalah kolom IDR masuk rekening.{% endblock %}
+{% block aksi %}
+  <a class="btn btn-utama" href="/pendapatan/baru?tahun={{ tahun }}">Catat pendapatan</a>
+{% endblock %}
+
+{% block konten %}
+  {% if daftar %}
+    <div class="panel">
+      <div class="panel-head">
+        <h2>{{ daftar|length }} penerimaan</h2>
+        <span class="catatan">Total {{ total|rp }}</span>
+      </div>
+      <div class="tabel-wrap">
+        <table class="tabel">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Sumber / klien</th>
+              <th class="angka">Valas</th>
+              <th class="angka">Kurs KMK</th>
+              <th class="angka">IDR masuk rekening</th>
+              <th>Bank</th>
+              <th class="aksi">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in daftar %}
+              <tr>
+                <td class="nowrap">{{ p.tanggal }}</td>
+                <td>
+                  <span class="sumber-nama truncate" title="{{ p.sumber }}">{{ p.sumber }}</span>
+                  {% if p.catatan %}<div class="small muted truncate" title="{{ p.catatan }}">{{ p.catatan }}</div>{% endif %}
+                </td>
+                <td class="angka">
+                  {% if p.jumlah_valas %}
+                    <span class="pill pill-valas">{{ p.mata_uang }} {{ p.jumlah_valas|angka(2) }}</span>
+                  {% else %}
+                    <span class="muted">—</span>
+                  {% endif %}
+                </td>
+                <td class="angka">{{ p.kurs_kmk|angka(2) if p.kurs_kmk else '—' }}</td>
+                <td class="angka utama">{{ p.idr|rp }}</td>
+                <td class="nowrap">{{ p.bank or '—' }}</td>
+                <td class="aksi">
+                  <a class="btn btn-sekunder btn-sm" href="/pendapatan/{{ p.id }}/ubah?tahun={{ tahun }}">Ubah</a>
+                  <form method="post" action="/pendapatan/{{ p.id }}/hapus?tahun={{ tahun }}"
+                        data-konfirmasi="Hapus penerimaan {{ p.sumber }} tanggal {{ p.tanggal }}? Ini tidak bisa dibatalkan.">
+                    <button class="btn btn-bahaya btn-sm" type="submit">Hapus</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4">Total {{ tahun }}</td>
+              <td class="angka">{{ total|rp }}</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="panel">
+      <div class="kosong">
+        <div class="judul">Belum ada pendapatan di {{ tahun }}</div>
+        <p>Catat tiap penerimaan begitu uangnya masuk rekening. Kolom IDR diisi angka yang benar-benar masuk, bukan hasil hitungan sendiri.</p>
+        <div class="aksi"><a class="btn btn-utama" href="/pendapatan/baru?tahun={{ tahun }}">Catat pendapatan</a></div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block judul %}SPT 1770 {{ tahun }}{% endblock %}
+{% block halaman %}SPT 1770 {{ tahun }}{% endblock %}
+{% block lede %}Angka siap dipindah ke Coretax, plus urutan pelaporannya. Cek ulang sebelum submit.{% endblock %}
+
+{% block konten %}
+  {% if ringkas.mode == 'norma' %}
+    <div class="panel">
+      <div class="panel-body">
+        <div class="catatan-box">
+          <span class="ikon" aria-hidden="true">!</span>
+          <p>
+            <strong>Pemberitahuan pemakaian norma (NPPN) wajib disampaikan paling lambat 31 Maret {{ tahun }}</strong>,
+            yaitu tiga bulan pertama tahun pajak, lewat layanan pemberitahuan norma di Coretax.
+            Kalau tidak disampaikan, lo dianggap memilih <em>pembukuan</em>, dan norma tidak boleh dipakai.
+            Kewajiban lain: menyelenggarakan pencatatan (halaman Pendapatan ini sudah jadi catatannya)
+            dan omzet gabungan satu keluarga tidak melebihi Rp4,8 miliar.
+          </p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Lampiran L2 — penghasilan dari pekerjaan bebas</h2>
+      <span class="catatan">
+        {% if ringkas.mode == 'norma' %}Pencatatan / NPPN{% else %}Pembukuan{% endif %}
+      </span>
+    </div>
+    <div class="panel-body">
+      <dl class="definisi">
+        <div class="baris"><dt>Penghasilan bruto setahun</dt><dd>{{ ringkas.bruto|rp }}</dd></div>
+        {% if ringkas.mode == 'norma' %}
+          <div class="baris"><dt>Norma ({{ ringkas.norma_persen|persen(0) }})</dt><dd>→ {{ ringkas.neto|rp }}</dd></div>
+        {% else %}
+          <div class="baris"><dt>Biaya usaha</dt><dd>− {{ ringkas.biaya|rp }}</dd></div>
+          <div class="baris"><dt>Penghasilan neto</dt><dd>{{ ringkas.neto|rp }}</dd></div>
+        {% endif %}
+        <div class="baris"><dt>Penghasilan neto dalam negeri</dt><dd>{{ (ringkas.neto - (penghasilan_luar_negeri if ringkas.mode == 'norma' else 0))|rp }}</dd></div>
+      </dl>
+      <p class="small muted">Baris luar negeri dipisah karena Coretax meminta keterangan penghasilan dari luar negeri. Porsi neto di atas dikurangi proporsi penghasilan luar negeri; sesuaikan bila pengisian di Coretax meminta angka berbeda.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Induk — penghasilan neto &amp; PPh terutang</h2>
+      <span class="catatan">Rumus resmi DJP</span>
+    </div>
+    <div class="panel-body">
+      <dl class="definisi">
+        <div class="baris"><dt>Penghasilan neto</dt><dd>{{ ringkas.neto|rp }}</dd></div>
+        <div class="baris"><dt>PTKP ({{ ringkas.status }})</dt><dd>− {{ ringkas.ptkp|rp }}</dd></div>
+        <div class="baris"><dt>Penghasilan Kena Pajak</dt><dd>{{ ringkas.pkp|rp }}</dd></div>
+        <div class="baris"><dt>PPh terutang</dt><dd>{{ ringkas.pph|rp }}</dd></div>
+        <div class="baris"><dt>Kredit pajak</dt><dd>− {{ ringkas.kredit|rp }}</dd></div>
+        <div class="baris">
+          <dt>{{ 'PPh lebih bayar (Pasal 28A)' if ringkas.kurang_bayar < 0 else 'PPh kurang bayar (Pasal 29)' }}</dt>
+          <dd class="{{ 'nilai-positif' if ringkas.kurang_bayar < 0 else 'nilai-negatif' }}">
+            {{ (ringkas.kurang_bayar * -1 if ringkas.kurang_bayar < 0 else ringkas.kurang_bayar)|rp }}
+          </dd>
+        </div>
+      </dl>
+
+      {% if ringkas.rincian %}
+        <div class="tabel-wrap">
+          <table class="tabel">
+            <thead>
+              <tr><th>Lapisan PKP</th><th class="angka">Dasar</th><th class="angka">Tarif</th><th class="angka">PPh</th></tr>
+            </thead>
+            <tbody>
+              {% for r in ringkas.rincian %}
+                <tr>
+                  <td>
+                    {{ r.dari|rp }} —
+                    {% if r.sampai %}{{ r.sampai|rp }}{% else %}ke atas{% endif %}
+                  </td>
+                  <td class="angka">{{ r.dasar|rp }}</td>
+                  <td class="angka">{{ (r.tarif * 100)|persen(0) }}</td>
+                  <td class="angka">{{ r.pajak|rp }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr><td colspan="3">Total PPh terutang</td><td class="angka">{{ ringkas.pph|rp }}</td></tr>
+            </tfoot>
+          </table>
+        </div>
+      {% endif %}
+      <p class="small muted">Urutan hitung ini mengikuti panduan resmi: bruto × norma = neto; neto − PTKP = PKP; PKP × tarif Pasal 17 = PPh terutang; dikurangi kredit pajak = kurang atau lebih bayar.</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:var(--space-6)">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Penghasilan luar negeri</h2>
+        <span class="catatan">Isian keterangan penghasilan luar negeri</span>
+      </div>
+      <div class="panel-body">
+        <dl class="definisi">
+          <div class="baris"><dt>Total penerimaan valas → IDR</dt><dd>{{ penghasilan_luar_negeri|rp }}</dd></div>
+        </dl>
+        <p class="small muted">Penghasilan dari klien luar negeri tetap objek pajak Indonesia. Karena klien LN umumnya tidak memotong pajak, seluruhnya jadi tanggungan lo. Kalau ada pajak yang sudah dipotong di negara klien, laporkan supaya bisa dikreditkan (Pasal 24).</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Kredit pajak</h2>
+        <span class="catatan">Total {{ ringkas.kredit|rp }}</span>
+      </div>
+      <div class="panel-body">
+        {% if setoran_jenis %}
+          <div class="tabel-wrap">
+            <table class="tabel">
+              <thead><tr><th>Jenis</th><th class="angka">Jumlah</th></tr></thead>
+              <tbody>
+                {% for s in setoran_jenis %}
+                  <tr><td>{{ s.jenis }}</td><td class="angka">{{ s.total|rp }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="muted small">Belum ada setoran. PPh kurang bayar dilunasi lewat tombol Bayar dan Lapor di Coretax; sistem akan menerbitkan kode billing sendiri.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if ringkas.mode == 'pembukuan' %}
+    <div class="panel">
+      <div class="panel-head"><h2>Biaya usaha {{ tahun }}</h2></div>
+      <div class="panel-body">
+        <form method="post" action="/spt/biaya" data-tunggu="Menyimpan…">
+          <input type="hidden" name="tahun" value="{{ tahun }}">
+          <div class="form-grid">
+            <div class="field">
+              <label for="biaya">Total biaya usaha (3M)</label>
+              <div class="field-nilai">
+                <span class="prefix">Rp</span>
+                <input type="text" id="biaya" name="biaya" data-format="ribuan" inputmode="numeric"
+                       value="{{ biaya or '' }}" placeholder="0">
+              </div>
+            </div>
+            <div class="field">
+              <label for="catatan-biaya">Catatan</label>
+              <input type="text" id="catatan-biaya" name="catatan" placeholder="Mis. perangkat, langganan, internet">
+            </div>
+          </div>
+          <div class="form-aksi" style="margin-top:var(--space-4)">
+            <button class="btn btn-utama" type="submit">Simpan biaya</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Urutan lapor lewat Coretax DJP</h2>
+      <span class="catatan">Sesuai panduan resmi Coretaxpedia</span>
+    </div>
+    <div class="panel-body">
+      <ol class="langkah">
+        <li>Pastikan semua penerimaan {{ tahun }} sudah tercatat di halaman Pendapatan, dan pemberitahuan norma (kalau pakai NPPN) sudah disampaikan paling lambat 31 Maret {{ tahun }}.</li>
+        <li>Buka menu <strong>Surat Pemberitahuan (SPT) → Surat Pemberitahuan (SPT) → Buat Konsep SPT</strong>, pilih <strong>PPh Orang Pribadi</strong>, lalu Lanjut.</li>
+        <li>Pilih <strong>SPT Tahunan</strong>, isi periode dan tahun pajak, lalu pilih model <strong>Normal</strong> (pelaporan pertama) atau <strong>Pembetulan</strong>.</li>
+        <li>Klik <strong>Buat Konsep SPT</strong>, lalu ikon pensil untuk mulai mengisi formulir.</li>
+        <li>Klik <strong>Posting</strong>: sistem akan mengisi sendiri sebagian besar formulir induk dan lampiran. Periksa dan perbaiki sesuai angka di halaman ini.</li>
+        <li>Pada formulir induk, pilih sumber penghasilan <strong>Pekerjaan Bebas</strong>, isi Lampiran L2, lengkapi L3 (penghasilan lain) dan L1 (harta, utang, tanggungan) bila ada.</li>
+        <li>Klik <strong>Bayar dan Lapor</strong>, pilih penyedia penandatangan, lalu isi tanda tangan digital (ID dan kata sandi) untuk validasi.</li>
+        <li>Klik <strong>Simpan</strong> lalu <strong>Konfirmasi Tanda Tangan</strong>. SPT kurang bayar akan pindah ke status <em>SPT Menunggu Pembayaran</em>.</li>
+        <li>Bayar lewat <strong>deposit</strong> atau <strong>kode billing</strong>. Kalau lewat tombol Bayar dan Lapor, kode billing dibuat otomatis, tidak perlu bikin manual. Setelah pembayaran berhasil, SPT otomatis pindah ke <em>SPT Dilaporkan</em>.</li>
+        <li>Cek BPE. Bukti Penerimaan Elektronik dikirim ke <strong>email</strong>, bukan file PDF, dan tidak muncul di menu Dokumen Saya. Kalau email tidak masuk, buka <strong>SPT → SPT Dilaporkan → ikon Email ✉</strong> untuk kirim ulang.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:var(--space-6)">
+    <div class="panel">
+      <div class="panel-head"><h2>Kode billing &amp; pembayaran</h2></div>
+      <div class="panel-body">
+        <dl class="definisi">
+          <div class="baris"><dt>Buat kode billing mandiri</dt><dd>Pembayaran → Layanan Mandiri Kode Billing</dd></div>
+          <div class="baris"><dt>Yang dipilih</dt><dd>KAP dan KJS</dd></div>
+          <div class="baris"><dt>Jumlah digit kode billing</dt><dd>15 digit</dd></div>
+          <div class="baris"><dt>Masa aktif kode billing</dt><dd>14 hari / 336 jam</dd></div>
+        </dl>
+        <p class="small muted">Masa aktif 14 hari mengacu Pengumuman Dirjen Pajak PENG-4/PJ/2025 (sebelumnya 7 hari). Kalau kedaluwarsa, kode billing harus dibuat ulang; kalau berasal dari pelaporan SPT, status SPT kembali jadi Konsep SPT. Kode billing yang dibuat sistem dari tombol Bayar dan Lapor dicek di <strong>Pembayaran → Daftar Kode Billing Belum Dibayar</strong> atau <strong>Portal Saya → Dokumen Saya</strong> (dokumen "Billing Code").</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Tenggat &amp; sanksi</h2></div>
+      <div class="panel-body">
+        <div class="tabel-wrap">
+          <table class="tabel">
+            <thead><tr><th>Kewajiban</th><th>Batas waktu</th></tr></thead>
+            <tbody>
+              <tr><td>Pemberitahuan pemakaian norma (NPPN)</td><td class="nowrap">31 Maret {{ tahun }}</td></tr>
+              <tr><td>Setor angsuran PPh Pasal 25</td><td class="nowrap">Tanggal 15 bulan berikutnya</td></tr>
+              <tr><td>Lapor SPT Tahunan Orang Pribadi</td><td class="nowrap">31 Maret {{ tahun|int + 1 }}</td></tr>
+              <tr><td>Masa aktif kode billing</td><td class="nowrap">14 hari sejak diterbitkan</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted" style="margin-top:var(--space-3)">Telat lapor SPT Tahunan OP dikenai denda Rp 100.000. Telat setor kena bunga sesuai tarif bunga yang berlaku.</p>
+        <p class="small muted">Angsuran PPh Pasal 25 tahun berjalan mengacu ke PPh terutang tahun sebelumnya, jadi angka yang wajar untuk mulai disisihkan sekitar {{ (ringkas.pph25_bulanan if ringkas.pph25_bulanan > 0 else 0)|rp }} per bulan.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-body">
+      <div class="catatan-box">
+        <span class="ikon" aria-hidden="true">!</span>
+        <p><strong>Ini alat bantu hitung, bukan nasihat pajak.</strong> Sejak PP 20/2026, penghasilan pekerjaan bebas tidak lagi bisa pakai PPh Final UMKM 0,5%, jadi dasar hitungnya tarif progresif dengan norma atau pembukuan. Kalau lo mempekerjakan orang lain dan tidak lagi bekerja sendiri, kategorinya bisa berubah jadi penghasilan usaha. Untuk keputusan resmi, cocokkan dengan ketentuan terbaru dan konsultan pajak atau AR di KPP lo.</p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

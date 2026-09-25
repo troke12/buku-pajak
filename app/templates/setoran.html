@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block judul %}Setoran pajak {{ tahun }}{% endblock %}
+{% block halaman %}Setoran pajak {{ tahun }}{% endblock %}
+{% block lede %}Catat setiap pembayaran pajak (kode billing / e-billing) supaya jadi kredit pajak saat lapor SPT.{% endblock %}
+{% block aksi %}
+  <a class="btn btn-utama" href="/setoran/baru?tahun={{ tahun }}">Catat setoran</a>
+{% endblock %}
+
+{% block konten %}
+  {% set persen_target = (total / target * 100) if target > 0 else 0 %}
+
+  <div class="stat-row" style="margin-bottom:var(--sp-6)">
+    <div class="stat">
+      <span class="stat-label">Total disetor {{ tahun }}</span>
+      <span class="stat-nilai">{{ total|rp }}</span>
+      <span class="stat-ket">{{ daftar|length }} transaksi</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Estimasi PPh terutang</span>
+      <span class="stat-nilai">{{ target|rp }}</span>
+      <span class="stat-ket">Dari halaman ringkasan</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">{{ 'Lebih bayar' if total > target else 'Sisa kurang bayar' }}</span>
+      <span class="stat-nilai {{ 'nilai-positif' if total > target else 'nilai-negatif' }}">
+        {{ (total - target if total > target else target - total)|rp }}
+      </span>
+      <span class="stat-ket">Perkiraan, belum final</span>
+    </div>
+  </div>
+
+  {% if target > 0 %}
+    <div class="panel">
+      <div class="panel-body">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-3);margin-bottom:6px">
+          <span>Porsi setoran terhadap estimasi PPh</span>
+          <span>{{ persen_target|float|round(1) }}%</span>
+        </div>
+        <div class="progress">
+          <div class="progress-fill {{ 'lunas' if persen_target >= 100 else '' }}"
+               style="width: {{ 100 if persen_target > 100 else persen_target|float|round(1) }}%"></div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if daftar %}
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Riwayat setoran</h2>
+        <span class="catatan">Total {{ total|rp }}</span>
+      </div>
+      <div class="tabel-wrap">
+        <table class="tabel">
+          <thead>
+            <tr>
+              <th>Tanggal</th><th>Jenis</th><th>Masa pajak</th>
+              <th class="angka">Jumlah</th><th>Catatan</th><th class="aksi">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in daftar %}
+              <tr>
+                <td class="nowrap">{{ s.tanggal }}</td>
+                <td class="utama">{{ s.jenis }}</td>
+                <td class="nowrap">{{ s.masa or '—' }}</td>
+                <td class="angka utama">{{ s.jumlah|rp }}</td>
+                <td><span class="truncate" title="{{ s.catatan or '' }}">{{ s.catatan or '—' }}</span></td>
+                <td class="aksi">
+                  <form method="post" action="/setoran/{{ s.id }}/hapus?tahun={{ tahun }}"
+                        data-konfirmasi="Hapus setoran {{ s.jenis }} sebesar {{ s.jumlah|rp }}?">
+                    <button class="btn btn-bahaya btn-sm" type="submit">Hapus</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr><td colspan="3">Total {{ tahun }}</td><td class="angka">{{ total|rp }}</td><td colspan="2"></td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="panel">
+      <div class="kosong">
+        <div class="judul">Belum ada setoran tercatat</div>
+        <p>Setiap kali bayar pajak lewat kode billing, catat di sini. Angkanya dipakai sebagai kredit pajak di SPT dan biar kelihatan sisa kurang bayarnya.</p>
+        <div class="aksi"><a class="btn btn-utama" href="/setoran/baru?tahun={{ tahun }}">Catat setoran</a></div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

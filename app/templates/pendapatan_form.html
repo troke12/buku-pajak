@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% set ubah = mode_form == 'ubah' %}
+{% block judul %}{{ 'Ubah' if ubah else 'Catat' }} pendapatan{% endblock %}
+{% block halaman %}{{ 'Ubah pendapatan' if ubah else 'Catat pendapatan' }}{% endblock %}
+{% block lede %}{{ 'Perbaiki data penerimaan ini.' if ubah else 'Isi sesuai yang tercatat di mutasi rekening. IDR masuk rekening jadi dasar hitungan pajak.' }}{% endblock %}
+
+{% block konten %}
+  <div class="panel" style="max-width:920px">
+    <form method="post" data-kurs-form data-tunggu="Menyimpan…"
+          action="{{ ('/pendapatan/' ~ nilai.get('id') ~ '/ubah') if ubah else '/pendapatan' }}">
+      <input type="hidden" name="tahun" value="{{ tahun }}">
+
+      <div class="panel-body">
+        {% if galat %}
+          <div class="flash flash-err" role="alert">{{ galat }}</div>
+        {% endif %}
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="tanggal">Tanggal uang masuk</label>
+            <input type="date" id="tanggal" name="tanggal" required
+                   value="{{ nilai.get('tanggal') or '' }}">
+            <span class="hint">Tanggal dana masuk rekening, bukan tanggal invoice.</span>
+          </div>
+
+          <div class="field">
+            <label for="sumber">Sumber / klien</label>
+            <input type="text" id="sumber" name="sumber" required
+                   placeholder="Mis. Upwork, klien Singapura"
+                   value="{{ nilai.get('sumber') or '' }}">
+          </div>
+
+          <div class="field">
+            <label for="mata_uang">Mata uang</label>
+            <select id="mata_uang" name="mata_uang">
+              {% for m in MATA_UANG %}
+                <option value="{{ m }}" {{ 'selected' if (nilai.get('mata_uang') or 'USD') == m else '' }}>{{ m }}</option>
+              {% endfor %}
+            </select>
+            <span class="hint">Pilih IDR kalau memang sudah rupiah dari awal.</span>
+          </div>
+
+          <div class="field">
+            <label for="jumlah_valas">Jumlah valas</label>
+            <input type="text" id="jumlah_valas" name="jumlah_valas" data-format="desimal"
+                   inputmode="decimal" placeholder="1.500,00"
+                   value="{{ nilai.get('jumlah_valas') or '' }}">
+          </div>
+
+          <div class="field lebar">
+            <label for="idr">IDR masuk rekening</label>
+            <div class="field-nilai">
+              <span class="prefix">Rp</span>
+              <input type="text" id="idr" name="idr" data-format="ribuan" inputmode="numeric" required
+                     placeholder="26.500.000" value="{{ nilai.get('idr') or '' }}">
+            </div>
+            <span class="hint">Angka pasti yang muncul di mutasi BCA/Mandiri. Ini yang jadi dasar perhitungan pajak.</span>
+          </div>
+
+          <div class="field">
+            <label for="bank">Bank tujuan</label>
+            <input type="text" id="bank" name="bank" placeholder="BCA / Mandiri"
+                   value="{{ nilai.get('bank') or '' }}">
+          </div>
+
+          <div class="field lebar">
+            <label for="kurs_kmk">Kurs pajak (KMK)</label>
+            <div class="field-nilai">
+              <input type="text" id="kurs_kmk" name="kurs_kmk" data-format="desimal"
+                     inputmode="decimal" placeholder="17.707,00"
+                     value="{{ nilai.get('kurs_kmk') or '' }}">
+              <button type="button" class="btn btn-sekunder nowrap" id="btn-ambil-kurs">Ambil kurs KMK</button>
+            </div>
+            <span class="hint">Opsional tapi disarankan. Dipakai untuk pembanding resmi, bukan dasar hitungan.</span>
+            <span class="hint" id="status-kurs" aria-live="polite"></span>
+          </div>
+
+          <div class="field lebar">
+            <div class="kotak-bantu" id="kotak-kurs" hidden>
+              <div class="baris"><span>Setara kurs KMK</span><span data-idr-kmk>—</span></div>
+              <div class="baris"><span>Selisih vs IDR rekening</span><span data-selisih>—</span></div>
+            </div>
+          </div>
+
+          <div class="field lebar">
+            <label for="catatan">Catatan</label>
+            <textarea id="catatan" name="catatan"
+                      placeholder="Mis. invoice #04, dipotong biaya transfer USD 12">{{ nilai.get('catatan') or '' }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body form-aksi">
+        <button class="btn btn-utama" type="submit">{{ 'Simpan perubahan' if ubah else 'Simpan pendapatan' }}</button>
+        <a class="btn btn-sekunder" href="/pendapatan?tahun={{ tahun }}">Batal</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

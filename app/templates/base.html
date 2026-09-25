@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block judul %}Buku Pajak{% endblock %} · Buku Pajak</title>
+  <link rel="stylesheet" href="/static/tokens.css">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">
+        <strong>Buku Pajak</strong>
+        <small>PPh pekerjaan bebas</small>
+      </span>
+    </div>
+
+    <nav class="nav" aria-label="Navigasi utama">
+      <a href="/?tahun={{ tahun }}" class="{{ 'aktif' if hal == 'ringkasan' else '' }}">
+        <span class="ikon" aria-hidden="true">▦</span> Ringkasan
+      </a>
+      <a href="/pendapatan?tahun={{ tahun }}" class="{{ 'aktif' if hal == 'pendapatan' else '' }}">
+        <span class="ikon" aria-hidden="true">↑</span> Pendapatan
+      </a>
+      <a href="/setoran?tahun={{ tahun }}" class="{{ 'aktif' if hal == 'setoran' else '' }}">
+        <span class="ikon" aria-hidden="true">↓</span> Setoran pajak
+      </a>
+      <a href="/spt?tahun={{ tahun }}" class="{{ 'aktif' if hal == 'spt' else '' }}">
+        <span class="ikon" aria-hidden="true">▤</span> SPT 1770
+      </a>
+      <a href="/pengaturan?tahun={{ tahun }}" class="{{ 'aktif' if hal == 'pengaturan' else '' }}">
+        <span class="ikon" aria-hidden="true">⚙</span> Pengaturan
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">
+      {% if pengaturan.nama %}<div class="who">{{ pengaturan.nama }}</div>{% endif %}
+      <div class="small muted">{{ pengaturan.status_ptkp }}{% if pengaturan.mode_hitung == 'norma' %} · norma {{ pengaturan.norma_persen }}%{% else %} · pembukuan{% endif %}</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1>{% block halaman %}{% endblock %}</h1>
+        <p class="lede">{% block lede %}{% endblock %}</p>
+      </div>
+      <div class="topbar-aksi">
+        <form class="tahun-pilih" method="get" action="{{ request.url.path }}">
+          <label for="tahun">Tahun pajak</label>
+          <select id="tahun" name="tahun" onchange="this.form.submit()">
+            {% for t in tahun_opsi %}
+              <option value="{{ t }}" {{ 'selected' if t == tahun else '' }}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        {% block aksi %}{% endblock %}
+      </div>
+    </header>
+
+    {% if pesan %}
+      <div class="flash flash-{{ tipe }}" role="status">{{ pesan }}</div>
+    {% endif %}
+
+    {% block konten %}{% endblock %}
+  </main>
+</div>
+<script src="/static/app.js" defer></script>
+</body>
+</html>

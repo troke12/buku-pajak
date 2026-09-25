@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block judul %}Catat setoran{% endblock %}
+{% block halaman %}Catat setoran{% endblock %}
+{% block lede %}Isi sesuai bukti pembayaran (BPN) dari e-billing DJP.{% endblock %}
+
+{% block konten %}
+  <div class="panel" style="max-width:760px">
+    <form method="post" action="/setoran" data-tunggu="Menyimpan…">
+      <input type="hidden" name="tahun" value="{{ tahun }}">
+
+      <div class="panel-body">
+        {% if galat %}
+          <div class="flash flash-err" role="alert">{{ galat }}</div>
+        {% endif %}
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="tanggal">Tanggal bayar</label>
+            <input type="date" id="tanggal" name="tanggal" required value="{{ nilai.get('tanggal') or '' }}">
+          </div>
+
+          <div class="field">
+            <label for="jenis">Jenis setoran</label>
+            <select id="jenis" name="jenis" required>
+              {% for j in JENIS_SETORAN %}
+                <option value="{{ j }}" {{ 'selected' if nilai.get('jenis') == j else '' }}>{{ j }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="masa">Masa pajak</label>
+            <input type="text" id="masa" name="masa" placeholder="2026-08"
+                   value="{{ nilai.get('masa') or '' }}">
+            <span class="hint">Bulan pajak yang dibayar, format YYYY-MM.</span>
+          </div>
+
+          <div class="field">
+            <label for="jumlah">Jumlah setoran</label>
+            <div class="field-nilai">
+              <span class="prefix">Rp</span>
+              <input type="text" id="jumlah" name="jumlah" data-format="ribuan" inputmode="numeric" required
+                     placeholder="1.000.000" value="{{ nilai.get('jumlah') or '' }}">
+            </div>
+          </div>
+
+          <div class="field lebar">
+            <label for="catatan">Catatan</label>
+            <textarea id="catatan" name="catatan"
+                      placeholder="Mis. NTPN, kode billing, atau keterangan lain">{{ nilai.get('catatan') or '' }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body form-aksi">
+        <button class="btn btn-utama" type="submit">Simpan setoran</button>
+        <a class="btn btn-sekunder" href="/setoran?tahun={{ tahun }}">Batal</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block judul %}Pengaturan{% endblock %}
+{% block halaman %}Pengaturan{% endblock %}
+{% block lede %}Identitas dan cara hitung. Perubahan langsung dipakai di halaman ringkasan dan SPT.{% endblock %}
+
+{% block konten %}
+  <div class="panel" style="max-width:860px">
+    <form method="post" action="/pengaturan" data-tunggu="Menyimpan…">
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="field">
+            <label for="nama">Nama wajib pajak</label>
+            <input type="text" id="nama" name="nama" value="{{ pengaturan.nama }}" placeholder="Nama sesuai NPWP">
+          </div>
+
+          <div class="field">
+            <label for="npwp">NPWP / NIK</label>
+            <input type="text" id="npwp" name="npwp" value="{{ pengaturan.npwp }}" placeholder="16 digit">
+          </div>
+
+          <div class="field">
+            <label for="status_ptkp">Status PTKP</label>
+            <select id="status_ptkp" name="status_ptkp">
+              {% for s in STATUS_SAH %}
+                <option value="{{ s }}" {{ 'selected' if pengaturan.status_ptkp == s else '' }}>{{ s }}</option>
+              {% endfor %}
+            </select>
+            <span class="hint">TK = tidak kawin, K = kawin, K/I = penghasilan istri digabung.</span>
+          </div>
+
+          <div class="field">
+            <label for="bank_default">Bank default</label>
+            <input type="text" id="bank_default" name="bank_default" value="{{ pengaturan.bank_default }}" placeholder="BCA / Mandiri">
+          </div>
+
+          <div class="field">
+            <label for="mode_hitung">Metode hitung</label>
+            <select id="mode_hitung" name="mode_hitung">
+              <option value="norma" {{ 'selected' if pengaturan.mode_hitung == 'norma' else '' }}>Norma (NPPN)</option>
+              <option value="pembukuan" {{ 'selected' if pengaturan.mode_hitung == 'pembukuan' else '' }}>Pembukuan</option>
+            </select>
+            <span class="hint">Pembukuan butuh input biaya usaha di halaman SPT.</span>
+          </div>
+
+          <div class="field">
+            <label for="norma_persen">Persentase norma</label>
+            <div class="field-nilai">
+              <input type="text" id="norma_persen" name="norma_persen" data-format="desimal"
+                     inputmode="decimal" value="{{ pengaturan.norma_persen }}" placeholder="50">
+              <span class="prefix">%</span>
+            </div>
+            <span class="hint">Tenaga ahli umumnya 50%. Cek PER-17/PJ/2015 untuk profesi &amp; wilayah lo.</span>
+          </div>
+
+          <div class="field">
+            <label for="ambang_selisih">Ambang peringatan selisih kurs</label>
+            <div class="field-nilai">
+              <input type="text" id="ambang_selisih" name="ambang_selisih" data-format="desimal"
+                     inputmode="decimal" value="{{ pengaturan.ambang_selisih }}" placeholder="2">
+              <span class="prefix">%</span>
+            </div>
+            <span class="hint">Munculkan peringatan kalau IDR rekening beda dari kurs KMK lebih dari ini.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body form-aksi">
+        <button class="btn btn-utama" type="submit">Simpan pengaturan</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Catatan</h2></div>
+    <div class="panel-body">
+      <p class="small muted">Data disimpan lokal di satu file SQLite (<code>data/pajak.db</code>). Backup cukup dengan menyalin file itu. Tidak ada data yang dikirim ke mana pun selain permintaan kurs resmi ke Kemenkeu saat lo klik "Ambil kurs KMK".</p>
+    </div>
+  </div>
+{% endblock %}

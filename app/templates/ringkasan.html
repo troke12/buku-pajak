@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block judul %}Ringkasan {{ tahun }}{% endblock %}
+{% block halaman %}Ringkasan {{ tahun }}{% endblock %}
+{% block lede %}Perkiraan PPh tahun berjalan, dihitung dari rupiah yang benar-benar masuk rekening.{% endblock %}
+{% block aksi %}
+  <a class="btn btn-utama" href="/pendapatan/baru?tahun={{ tahun }}">Catat pendapatan</a>
+{% endblock %}
+
+{% block konten %}
+  {% set persen_setor = (ringkas.kredit / ringkas.pph * 100) if ringkas.pph > 0 else 0 %}
+
+  <div class="stat-row">
+    <div class="stat utama">
+      <span class="stat-label">Penghasilan bruto</span>
+      <span class="stat-nilai">{{ ringkas.bruto|rp }}</span>
+      <span class="stat-ket">IDR masuk rekening, {{ tahun }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Estimasi PPh terutang</span>
+      <span class="stat-nilai">{{ ringkas.pph|rp }}</span>
+      <span class="stat-ket">Tarif progresif Pasal 17</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Sudah disetor</span>
+      <span class="stat-nilai">{{ ringkas.kredit|rp }}</span>
+      <span class="stat-ket">{{ setoran_jumlah }} transaksi</span>
+    </div>
+    {% if ringkas.kurang_bayar >= 0 %}
+      <div class="stat">
+        <span class="stat-label">Kurang bayar</span>
+        <span class="stat-nilai nilai-negatif">{{ ringkas.kurang_bayar|rp }}</span>
+        <span class="stat-ket">Perkiraan, belum final</span>
+      </div>
+    {% else %}
+      <div class="stat">
+        <span class="stat-label">Lebih bayar</span>
+        <span class="stat-nilai nilai-positif">{{ (ringkas.kurang_bayar * -1)|rp }}</span>
+        <span class="stat-ket">Perkiraan, belum final</span>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if selisih_kurs %}
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Selisih kurs perlu dicek</h2>
+        <span class="catatan">Selisih &gt; {{ pengaturan.ambang_selisih }}% dari kurs KMK</span>
+      </div>
+      <div class="panel-body">
+        <div class="catatan-box">
+          <span class="ikon" aria-hidden="true">!</span>
+          <p>Beberapa penerimaan nilainya beda cukup jauh dari hasil konversi kurs KMK. Selisih ini bisa jadi biaya transfer, kurs bank, atau kekeliruan input. Simpan bukti transfernya untuk jaga-jaga kalau dicek.</p>
+        </div>
+        <div class="tabel-wrap">
+          <table class="tabel">
+            <thead>
+              <tr>
+                <th>Tanggal</th><th>Sumber</th>
+                <th class="angka">IDR masuk</th><th class="angka">IDR kurs KMK</th><th class="angka">Selisih</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in selisih_kurs %}
+                <tr>
+                  <td class="nowrap">{{ s.tanggal }}</td>
+                  <td><span class="sumber-nama truncate" title="{{ s.sumber }}">{{ s.sumber }}</span></td>
+                  <td class="angka">{{ s.idr|rp }}</td>
+                  <td class="angka">{{ s.idr_kmk|rp }}</td>
+                  <td class="angka">
+                    <span class="pill {{ 'pill-neg' if s.selisih < 0 else 'pill-valas' }}">
+                      {{ s.selisih|rp }} · {{ s.selisih_persen|persen(1) }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Perhitungan PPh</h2>
+      <span class="catatan">
+        {% if ringkas.mode == 'norma' %}NPPN {{ ringkas.norma_persen|persen(0) }} dari bruto{% else %}Pembukuan{% endif %}
+      </span>
+    </div>
+    <div class="panel-body">
+      <dl class="definisi">
+        <div class="baris"><dt>Penghasilan bruto (IDR masuk rekening)</dt><dd>{{ ringkas.bruto|rp }}</dd></div>
+        {% if ringkas.mode == 'pembukuan' %}
+          <div class="baris"><dt>Biaya usaha (3M)</dt><dd>− {{ ringkas.biaya|rp }}</dd></div>
+          <div class="baris"><dt>Penghasilan neto</dt><dd>{{ ringkas.neto|rp }}</dd></div>
+        {% else %}
+          <div class="baris"><dt>Penghasilan neto ({{ ringkas.norma_persen|persen(0) }} × bruto)</dt><dd>{{ ringkas.neto|rp }}</dd></div>
+        {% endif %}
+        <div class="baris"><dt>PTKP {{ ringkas.status }}</dt><dd>− {{ ringkas.ptkp|rp }}</dd></div>
+        <div class="baris"><dt>Penghasilan Kena Pajak (PKP)</dt><dd>{{ ringkas.pkp|rp }}</dd></div>
+        <div class="baris"><dt>PPh terutang</dt><dd>{{ ringkas.pph|rp }}</dd></div>
+        <div class="baris"><dt>Kredit pajak (sudah disetor)</dt><dd>− {{ ringkas.kredit|rp }}</dd></div>
+        <div class="baris">
+          <dt>{{ 'Lebih bayar' if ringkas.kurang_bayar < 0 else 'Kurang bayar' }}</dt>
+          <dd class="{{ 'nilai-positif' if ringkas.kurang_bayar < 0 else 'nilai-negatif' }}">
+            {{ (ringkas.kurang_bayar * -1 if ringkas.kurang_bayar < 0 else ringkas.kurang_bayar)|rp }}
+          </dd>
+        </div>
+      </dl>
+
+      {% if ringkas.pph > 0 %}
+        <div>
+          <div class="baris" style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-3);margin-bottom:6px">
+            <span>Porsi setoran</span>
+            <span>{{ persen_setor|float|round(1) }}% dari estimasi PPh</span>
+          </div>
+          <div class="progress">
+            <div class="progress-fill {{ 'lunas' if persen_setor >= 100 else '' }}"
+                 style="width: {{ 100 if persen_setor > 100 else persen_setor|float|round(1) }}%"></div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:var(--sp-6)">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Penghasilan per bulan</h2>
+        <span class="catatan">Total {{ ringkas.bruto|rp }}</span>
+      </div>
+      <div class="panel-body">
+        {% if ringkas.bruto > 0 %}
+          <div class="chart" role="img" aria-label="Grafik penghasilan per bulan {{ tahun }}">
+            {% for nama, nilai in per_bulan %}
+              {% set tinggi = (nilai * 100 / maks_bulan) if maks_bulan else 0 %}
+              <div class="chart-kolom" title="{{ nama }} {{ tahun }}: {{ nilai|rp }}">
+                <div class="chart-bar {{ 'maks' if nilai == maks_bulan and nilai > 0 else ('kosong' if nilai == 0 else '') }}"
+                     style="height: {{ tinggi if tinggi > 1 else 1.5 }}%"></div>
+                <span class="chart-label">{{ nama }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="muted small">Belum ada penghasilan tercatat di {{ tahun }}.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Per sumber</h2>
+        <span class="catatan">{{ per_sumber|length }} sumber</span>
+      </div>
+      <div class="panel-body">
+        {% if per_sumber %}
+          <div class="tabel-wrap">
+            <table class="tabel">
+              <thead>
+                <tr><th>Sumber</th><th class="angka">Transaksi</th><th class="angka">Total IDR</th></tr>
+              </thead>
+              <tbody>
+                {% for s in per_sumber %}
+                  <tr>
+                    <td><span class="sumber-nama truncate" title="{{ s.sumber }}">{{ s.sumber }}</span></td>
+                    <td class="angka">{{ s.jumlah_transaksi }}</td>
+                    <td class="angka">{{ s.total|rp }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="muted small">Belum ada data.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if ringkas.bruto == 0 %}
+    <div class="panel">
+      <div class="kosong">
+        <div class="judul">Belum ada penghasilan tercatat untuk {{ tahun }}</div>
+        <p>Mulai dari mencatat satu penerimaan: tanggal uang masuk, dari klien mana, berapa dolar yang dikirim, dan berapa rupiah yang benar-benar masuk rekening.</p>
+        <div class="aksi"><a class="btn btn-utama" href="/pendapatan/baru?tahun={{ tahun }}">Catat pendapatan pertama</a></div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
