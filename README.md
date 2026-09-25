@@ -4,8 +4,8 @@
 
 # Buku Pajak
 
-> Sebuah aplikasi buat pekerja freelancer tapi terpaksa buat laporan pajak dan harus berapa
-> bayarnya karena aturan bangsa konoha biar NPWP nya tetep aktif.
+> Buku pajak buat freelancer: catat mutasi rekening, hitung PPh, siap lapor SPT 1770.
+> Karena di Konoha, napas aja kena pajak.
 
 Pencatatan penghasilan dan hitung PPh untuk **pekerjaan bebas** (freelancer).
 
