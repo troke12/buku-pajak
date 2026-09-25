@@ -50,6 +50,13 @@ class TestNetoDanPkp(unittest.TestCase):
     def test_pkp_tidak_negatif(self):
         self.assertEqual(hitung_pkp(40_000_000, 54_000_000), Decimal("0"))
 
+    def test_pkp_dibulatkan_ke_bawah_per_seribu(self):
+        # Pasal 17 ayat (4) UU PPh: PKP dibulatkan ke bawah dalam ribuan rupiah penuh
+        self.assertEqual(hitung_pkp(150_000_999, 54_000_000), Decimal("96000000"))
+
+    def test_pkp_pas_kelipatan_seribu_tidak_berubah(self):
+        self.assertEqual(hitung_pkp(96_000_000, 0), Decimal("96000000"))
+
 
 class TestPphProgresif(unittest.TestCase):
     def test_pkp_nol(self):
@@ -119,6 +126,14 @@ class TestRingkasan(unittest.TestCase):
         r = ringkasan_tahunan(0)
         self.assertEqual(r.bruto, Decimal("0"))
         self.assertEqual(r.pph, Decimal("0"))
+
+    def test_neto_pecahan_pkp_tetap_dibulatkan_ke_bawah(self):
+        # norma 33% dari bruto ganjil -> neto & PKP mentah pecahan rupiah;
+        # PKP hasil akhir tetap harus kelipatan Rp1.000 (Pasal 17 ayat (4) UU PPh)
+        r = ringkasan_tahunan(400_001_517, status="TK/0", mode="norma", norma_persen=33)
+        self.assertEqual(r.neto, Decimal("132000500.61"))
+        self.assertEqual(r.pkp, Decimal("78000000"))
+        self.assertEqual(r.pkp % Decimal("1000"), Decimal("0"))
 
 
 if __name__ == "__main__":

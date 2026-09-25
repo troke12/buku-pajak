@@ -23,6 +23,8 @@ PTKP_MAKS_TANGGUNGAN = 3
 
 NORMA_DEFAULT = Decimal("50")
 
+SATUAN_BULAT_PKP = Decimal("1000")
+
 # (batas atas lapisan, tarif); None = lapisan terakhir tanpa batas
 LAPISAN_TARIF: list[tuple[Decimal | None, Decimal]] = [
     (Decimal("60000000"), Decimal("0.05")),
@@ -71,8 +73,13 @@ def hitung_neto(bruto, mode: str, norma_persen=NORMA_DEFAULT, biaya=0) -> Decima
 
 
 def hitung_pkp(neto, ptkp) -> Decimal:
+    """PKP = neto - PTKP (minimum 0), dibulatkan ke bawah per Rp1.000 sebelum
+    kena tarif — wajib per Pasal 17 ayat (4) UU PPh, masih berlaku di era Coretax
+    (PER-11/PJ/2025)."""
     pkp = Decimal(neto) - Decimal(ptkp)
-    return pkp if pkp > 0 else Decimal(0)
+    if pkp <= 0:
+        return Decimal(0)
+    return (pkp // SATUAN_BULAT_PKP) * SATUAN_BULAT_PKP
 
 
 def hitung_pph(pkp_nilai) -> tuple[Decimal, list[dict]]:

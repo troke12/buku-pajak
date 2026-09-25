@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from . import db
 from .config import DB_PATH
-from .tax import STATUS_SAH, ringkasan_tahunan
+from .tax import STATUS_SAH, bulatkan, ringkasan_tahunan
 from .util import ke_angka
 
 router = APIRouter(prefix="/api", tags=["pajak"])
@@ -227,25 +227,25 @@ def ringkasan(tahun: str = Query(default=TAHUN_KINI), conn=Depends(koneksi)):
 
     return {
         "tahun": tahun,
-        "bruto": int(ringkas.bruto),
-        "neto": int(ringkas.neto),
-        "ptkp": int(ringkas.ptkp),
-        "pkp": int(ringkas.pkp),
-        "pph": int(ringkas.pph),
-        "kredit": int(ringkas.kredit),
-        "kurang_bayar": int(ringkas.kurang_bayar),
-        "pph25_bulanan": int(ringkas.pph25_bulanan),
+        "bruto": bulatkan(ringkas.bruto),
+        "neto": bulatkan(ringkas.neto),
+        "ptkp": bulatkan(ringkas.ptkp),
+        "pkp": bulatkan(ringkas.pkp),
+        "pph": bulatkan(ringkas.pph),
+        "kredit": bulatkan(ringkas.kredit),
+        "kurang_bayar": bulatkan(ringkas.kurang_bayar),
+        "pph25_bulanan": bulatkan(ringkas.pph25_bulanan),
         "status_ptkp": ringkas.status,
         "mode": ringkas.mode,
         "norma_persen": float(ringkas.norma_persen),
-        "biaya": int(ringkas.biaya),
+        "biaya": bulatkan(ringkas.biaya),
         "rincian": [
             {
-                "dari": int(r["dari"]),
-                "sampai": int(r["sampai"]) if r["sampai"] is not None else None,
+                "dari": bulatkan(r["dari"]),
+                "sampai": bulatkan(r["sampai"]) if r["sampai"] is not None else None,
                 "tarif": float(r["tarif"]),
-                "dasar": int(r["dasar"]),
-                "pajak": int(r["pajak"]),
+                "dasar": bulatkan(r["dasar"]),
+                "pajak": bulatkan(r["pajak"]),
             }
             for r in ringkas.rincian
         ],
