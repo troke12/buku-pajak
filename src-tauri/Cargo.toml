@@ -1,0 +1,28 @@
+[package]
+name = "buku-pajak"
+version = "0.1.0"
+description = "Buku Pajak — aplikasi desktop pencatatan pajak pekerjaan bebas"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[[bin]]
+name = "buku-pajak"
+path = "src/main.rs"
+
+# Rekomendasi resmi Tauri buat minimalkan ukuran binary rilis:
+# https://v2.tauri.app/concept/size/ (opt-level "s", bukan "z" — itu bukan
+# nilai yang didokumentasikan resmi meski sering disarankan orang).
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

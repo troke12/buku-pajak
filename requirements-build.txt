@@ -1,0 +1,3 @@
+# Dependensi build-time saja (bikin binary sidecar Tauri), bukan dependensi
+# runtime aplikasi — jangan digabung ke requirements.txt.
+pyinstaller==6.22.3

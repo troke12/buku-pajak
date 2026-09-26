@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Buku Pajak</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fdfaf6;
+        --dot: #c8873f;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #2b2622;
+        }
+      }
+
+      body {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: var(--bg);
+        font-family: system-ui, sans-serif;
+      }
+
+      .splash {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      /* Banner logo bukan persegi (2172x724) — lebar dibatasi & auto-height
+         supaya proporsi tetap terjaga, tidak di-stretch. */
+      .splash img {
+        width: min(60vw, 360px);
+        height: auto;
+        animation: napas 2.2s ease-in-out infinite;
+      }
+
+      @keyframes napas {
+        0%,
+        100% {
+          opacity: 0.55;
+          transform: scale(0.97);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .titik {
+        display: flex;
+        gap: 6px;
+      }
+
+      .titik span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--dot);
+        animation: kedip 1.2s ease-in-out infinite;
+      }
+
+      .titik span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .titik span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes kedip {
+        0%,
+        80%,
+        100% {
+          opacity: 0.25;
+        }
+        40% {
+          opacity: 1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .splash img,
+        .titik span {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="splash">
+      <img src="coretax-breaker.png" alt="Buku Pajak" />
+      <div class="titik">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </body>
+</html>

@@ -22,3 +22,12 @@ web/dist/
 web/.vite/
 web/*.tsbuildinfo
 web/node_modules/.tmp/
+
+# desktop (Tauri) — hasil build, bukan source
+src-tauri/target/
+src-tauri/binaries/*
+!src-tauri/binaries/.gitkeep
+src-tauri/gen/schemas/
+build/
+dist/
+*.spec

@@ -149,6 +149,31 @@ python3 -m unittest discover -s tests -v
 cd web && npm run build
 ```
 
+## Aplikasi Desktop
+
+Selain dijalankan lewat `./run.sh`, Buku Pajak juga bisa dibangun jadi aplikasi desktop
+installable (Windows/macOS/Linux) memakai [Tauri](https://tauri.app). Arsitekturnya tetap
+sama seperti mode web: backend FastAPI dibungkus jadi binary standalone (via PyInstaller)
+yang berjalan sebagai *sidecar*, lalu window native Tauri diarahkan ke server lokal itu,
+sehingga kode frontend maupun backend tidak berubah sama sekali.
+
+Build lokal (Linux, butuh Rust dan `tauri-cli`):
+
+```bash
+cargo install tauri-cli --version "^2"
+./scripts/build-sidecar.sh   # bangun backend jadi binary sidecar
+cd src-tauri && cargo tauri build
+```
+
+> PyInstaller tidak bisa cross-compile: binary Windows harus dibangun di Windows, binary
+> macOS di macOS. Build lokal di atas hanya menghasilkan installer untuk platform yang
+> dipakai membangunnya. Installer untuk ketiga platform sekaligus dihasilkan otomatis lewat
+> workflow CI di `.github/workflows/build-desktop.yml` (GitHub Actions, matrix
+> ubuntu/windows/macos), bisa diunduh dari tab Actions tiap kali workflow itu jalan.
+
+Data aplikasi desktop tersimpan di folder data aplikasi bawaan OS (lewat `app_data_dir()`
+Tauri), terpisah dari `data/pajak.db` yang dipakai mode `./run.sh`.
+
 ## Data dan Backup
 
 Seluruh data tersimpan lokal dalam satu file SQLite (`data/pajak.db`). Backup dilakukan dengan
